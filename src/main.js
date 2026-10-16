@@ -2,6 +2,7 @@
 import * as THREE from 'three';
 
 const scene = new THREE.Scene();
+const timer = new THREE.Timer();
 scene.background = new THREE.Color(0x171923);
 
 const camera = new THREE.PerspectiveCamera(
@@ -11,6 +12,147 @@ const camera = new THREE.PerspectiveCamera(
   1000
 );
 camera.position.set(0, 1.6, 0);
+scene.add(camera);
+
+const axeModel = new THREE.Group();
+
+// Materials
+const woodMaterial = new THREE.MeshStandardMaterial({
+  color: 0x79502f,
+  roughness: 0.85
+});
+
+const steelMaterial = new THREE.MeshStandardMaterial({
+  color: 0xaeb8c4,
+  metalness: 0.8,
+  roughness: 0.3
+});
+
+const darkMetalMaterial = new THREE.MeshStandardMaterial({
+  color: 0x454b55,
+  metalness: 0.65,
+  roughness: 0.45
+});
+
+const sleeveMaterial = new THREE.MeshStandardMaterial({
+  color: 0x343b4b,
+  roughness: 0.9
+});
+
+const skinMaterial = new THREE.MeshStandardMaterial({
+  color: 0xc58f70,
+  roughness: 0.85
+});
+
+// Creates an elongated rounded limb between two points.
+function addLimb(start, end, radius, material) {
+  const a = new THREE.Vector3(...start);
+  const b = new THREE.Vector3(...end);
+  const direction = new THREE.Vector3().subVectors(b, a);
+  const length = direction.length();
+
+  const limb = new THREE.Mesh(
+    new THREE.CapsuleGeometry(
+      radius,
+      Math.max(0.01, length - radius * 2),
+      4,
+      8
+    ),
+    material
+  );
+
+  limb.position.copy(a).add(b).multiplyScalar(0.5);
+  limb.quaternion.setFromUnitVectors(
+    new THREE.Vector3(0, 1, 0),
+    direction.normalize()
+  );
+
+  axeModel.add(limb);
+  return limb;
+}
+
+
+ // FOREARMS: broad sleeves with visible elbow joints.
+
+addLimb(
+  [-0.38, -0.92, 0.10],
+  [-0.10, -0.12, 0.08],
+  0.15,
+  sleeveMaterial
+);
+
+addLimb(
+  [0.48, -0.92, 0.10],
+  [0.10, 0.18, 0.08],
+  0.15,
+  sleeveMaterial
+);
+
+
+// Cuffs make the transition from sleeve to hand visible.
+function addCuff(x, y, angle) {
+  const cuff = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.145, 0.13, 0.13, 10),
+    darkMetalMaterial
+  );
+  cuff.position.set(x, y, 0.06);
+  cuff.rotation.z = angle;
+  axeModel.add(cuff);
+}
+
+addCuff(-0.10, -0.12, -0.55);
+addCuff(0.10, 0.18, 0.55);
+
+// HANDS: palms, four fingers, and thumbs.
+function addHand(y, side) {
+  // Palm
+  const palm = new THREE.Mesh(
+    new THREE.BoxGeometry(0.17, 0.15, 0.105),
+    skinMaterial
+  );
+  palm.position.set(0.015, y, -0.095);
+  palm.rotation.z = side * -0.12;
+  axeModel.add(palm);
+
+  // Four fingers curled across the front of the handle.
+  for (let i = 0; i < 4; i++) {
+    const finger = new THREE.Mesh(
+      new THREE.CapsuleGeometry(0.023, 0.055, 3, 6),
+      skinMaterial
+    );
+
+    finger.position.set(
+      -0.055 + i * 0.038,
+      y - 0.025 - Math.abs(i - 1.5) * 0.008,
+      -0.16
+    );
+
+    finger.rotation.z = side * 0.12;
+    axeModel.add(finger);
+  }
+
+  // Thumb crossing the grip.
+  const thumb = new THREE.Mesh(
+    new THREE.CapsuleGeometry(0.026, 0.065, 3, 6),
+    skinMaterial
+  );
+
+  thumb.position.set(-0.085, y + 0.015, -0.135);
+  thumb.rotation.z = -0.8;
+  axeModel.add(thumb);
+}
+
+addHand(0.17, 1);
+addHand(-0.20, -1);
+
+
+// Initial first-person position.
+axeModel.position.set(0.55, -0.55, -1.15);
+axeModel.rotation.z = -0.18;
+
+camera.add(axeModel);
+
+
 
 
 
@@ -18,6 +160,29 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.style.margin = '0';
 document.body.appendChild(renderer.domElement);
+
+renderer.domElement.style.display = 'block';
+
+renderer.domElement.addEventListener('click', () => {
+  renderer.domElement.requestPointerLock();
+});
+
+document.addEventListener('mousemove', (event) => {
+  if (document.pointerLockElement !== renderer.domElement) return;
+
+  yaw -= event.movementX * mouseSensitivity;
+  pitch -= event.movementY * mouseSensitivity;
+
+  pitch = Math.max(
+    -Math.PI / 2 + 0.01,
+    Math.min(Math.PI / 2 - 0.01, pitch)
+  );
+
+  camera.rotation.order = 'YXZ';
+  camera.rotation.y = yaw;
+  camera.rotation.x = pitch;
+});
+
 
 const healthBar = document.createElement('div');
 
@@ -43,6 +208,21 @@ healthFill.style.cssText = `
 
 healthBar.appendChild(healthFill);
 document.body.appendChild(healthBar);
+const crosshair = document.createElement('div');
+
+crosshair.textContent = '+';
+crosshair.style.cssText = `
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font: 24px monospace;
+  pointer-events: none;
+  z-index: 10;
+`;
+
+document.body.appendChild(crosshair);
 
 function updateHealthBar() {
   healthFill.style.width =
@@ -76,25 +256,78 @@ scene.add(enemy);
 let enemyHP = 100;
 const maxEnemyHP = 100;
 
+
+const axe = {
+  damage: 20,
+  range: 2.5,
+  windup: 0.4,
+  swing: 0.2,
+  recovery: 0.4,
+};
+
+
+const raycaster = new THREE.Raycaster();
+
+let attackPhase = 'ready';
+let phaseTimer = 0;
+
+function hitWithAxe() {
+  if (enemyHP <= 0) return;
+
+  camera.updateMatrixWorld(true);
+
+  raycaster.setFromCamera(
+    new THREE.Vector2(0, 0),
+    camera
+  );
+
+  const hits = raycaster.intersectObject(enemy);
+
+  if (hits.length === 0) return;
+  if (hits[0].distance > axe.range) return;
+
+  enemyHP = Math.max(0, enemyHP - axe.damage);
+  updateHealthBar();
+
+  if (enemyHP === 0) {
+    scene.remove(enemy);
+  }
+}
+
+function startAxeAttack() {
+  if (attackPhase !== 'ready') return;
+
+  attackPhase = 'windup';
+  phaseTimer = 0;
+}
+
 const keys = {};
+
+let yaw = 0;
+let pitch = 0;
+
+const mouseSensitivity = 0.002;
+
+
 
 
 window.addEventListener('keydown', (event) => {
-  const key = event.key.toLowerCase();
-
-  keys[key] = true;
-
-  if (key === 'f') {
-    enemyHP = Math.max(0, enemyHP - 10);
-    updateHealthBar();
-  }
+  keys[event.key.toLowerCase()] = true;
 });
 
 window.addEventListener('keyup', (event) => {
   keys[event.key.toLowerCase()] = false;
 });
 
-const moveSpeed = 0.1;
+renderer.domElement.addEventListener('mousedown', (event) => {
+  if (event.button === 0) {
+    startAxeAttack();
+  }
+});
+
+
+const moveSpeed = 4;
+const sprintMultiplier = 1.6;
 
 
 
@@ -102,31 +335,63 @@ function animate() {
   requestAnimationFrame(animate);
 
   
+
 const forwardX = -Math.sin(yaw);
 const forwardZ = -Math.cos(yaw);
 
 const rightX = Math.cos(yaw);
 const rightZ = -Math.sin(yaw);
 
+let moveX = 0;
+let moveZ = 0;
+
 if (keys['w']) {
-  player.position.x += forwardX * moveSpeed;
-  player.position.z += forwardZ * moveSpeed;
+  moveX += forwardX;
+  moveZ += forwardZ;
 }
 
 if (keys['s']) {
-  player.position.x -= forwardX * moveSpeed;
-  player.position.z -= forwardZ * moveSpeed;
+  moveX -= forwardX;
+  moveZ -= forwardZ;
 }
 
 if (keys['d']) {
-  player.position.x += rightX * moveSpeed;
-  player.position.z += rightZ * moveSpeed;
+  moveX += rightX;
+  moveZ += rightZ;
 }
 
 if (keys['a']) {
-  player.position.x -= rightX * moveSpeed;
-  player.position.z -= rightZ * moveSpeed;
+  moveX -= rightX;
+  moveZ -= rightZ;
 }
+
+// Normalize diagonal movement.
+const length = Math.hypot(moveX, moveZ);
+
+if (length > 0) {
+  moveX /= length;
+  moveZ /= length;
+}
+
+const sprinting = keys['shift'];
+const speed = moveSpeed * (sprinting ? sprintMultiplier : 1);
+
+// Convert units per second into movement per frame.
+timer.update();
+const delta = timer.getDelta();
+
+player.position.x += moveX * speed * delta;
+player.position.z += moveZ * speed * delta;
+
+// Keep the player inside the arena.
+player.position.x = THREE.MathUtils.clamp(
+  player.position.x, -9.5, 9.5
+);
+
+player.position.z = THREE.MathUtils.clamp(
+  player.position.z, -9.5, 9.5
+);
+
 
   // Keep the camera at the player's eye height.
   camera.position.set(
@@ -135,7 +400,109 @@ if (keys['a']) {
     player.position.z
   );
 
-  renderer.render(scene, camera);
+
+
+const smooth = (t) => t * t * (3 - 2 * t);
+
+// Each pose moves the entire axe-and-arms assembly.
+const idlePose = {
+  x: 0.55, y: -0.55, z: -1.15,
+  rx: 0, ry: 0, rz: -0.18
+};
+
+
+const windupPose = {
+  x: 2.0, y: -0.20, z: -1.40,
+  rx: -0.15, ry: -0.20, rz: -0.65
+};
+
+const impactPose = {
+  x: -0.30, y: -0.65, z: -1.05,
+  rx: 0.08, ry: 0.18, rz: 0.38
+};
+
+
+function setAxePose(pose) {
+  axeModel.position.set(pose.x, pose.y, pose.z);
+  axeModel.rotation.set(pose.rx, pose.ry, pose.rz);
+}
+
+
+function blendAxePose(from, to, progress, easing = smooth) {
+  const t = easing(THREE.MathUtils.clamp(progress, 0, 1));
+  const mix = (a, b) => a + (b - a) * t;
+
+  setAxePose({
+    x: mix(from.x, to.x),
+    y: mix(from.y, to.y),
+    z: mix(from.z, to.z),
+    rx: mix(from.rx, to.rx),
+    ry: mix(from.ry, to.ry),
+    rz: mix(from.rz, to.rz)
+  });
+}
+
+    
+
+
+
+if (attackPhase === 'windup') {
+  // Pull the entire weapon and arms back to the right.
+  blendAxePose(
+    idlePose,
+    windupPose,
+    phaseTimer / axe.windup
+  );
+
+} else if (attackPhase === 'swing') {
+  // Accelerate through a wide right-to-left sweep.
+  // The quadratic easing makes the strike gain speed.
+  blendAxePose(
+    windupPose,
+    impactPose,
+    phaseTimer / axe.swing,
+    t => t * t
+  );
+
+} else if (attackPhase === 'recovery') {
+  // The weapon carries through before returning to guard.
+  blendAxePose(
+    impactPose,
+    idlePose,
+    phaseTimer / axe.recovery
+  );
+
+} else {
+  setAxePose(idlePose);
+}
+
+if (attackPhase !== 'ready') {
+  phaseTimer += delta;
+
+  if (
+    attackPhase === 'windup' &&
+    phaseTimer >= axe.windup
+  ) {
+    attackPhase = 'swing';
+    phaseTimer = 0;
+
+    hitWithAxe();
+  } else if (
+    attackPhase === 'swing' &&
+    phaseTimer >= axe.swing
+  ) {
+    attackPhase = 'recovery';
+    phaseTimer = 0;
+  } else if (
+    attackPhase === 'recovery' &&
+    phaseTimer >= axe.recovery
+  ) {
+    attackPhase = 'ready';
+    phaseTimer = 0;
+  }
+}
+
+    renderer.render(scene, camera);
 }
 
 animate();
