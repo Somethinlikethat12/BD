@@ -164,7 +164,7 @@ const axeFileInput = document.getElementById("axeFile");
 
 
 glbLoader.load(
-  "./glb.glb",
+  "/models/glb.glb",
   (gltf) => {
     const axe = gltf.scene.getObjectByName("Axe");
 
