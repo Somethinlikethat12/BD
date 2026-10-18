@@ -164,9 +164,10 @@ const axeFileInput = document.getElementById("axeFile");
 
 
 glbLoader.load(
-  import glbUrl from "../models/glb.glb?url";
+  glbUrl,
   (gltf) => {
     const axe = gltf.scene.getObjectByName("Axe");
+    // ...
 
     if (!axe) {
       console.error("Couldn't find the Axe group!");
