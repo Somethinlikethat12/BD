@@ -1,8 +1,7 @@
 
-import * as THREE from 'three';
 
 const scene = new THREE.Scene();
-const timer = new THREE.Timer();
+let lastFrameTime = performance.now();
 scene.background = new THREE.Color(0x171923);
 
 const camera = new THREE.PerspectiveCamera(
@@ -147,8 +146,64 @@ addHand(-0.20, -1);
 
 
 // Initial first-person position.
+// Initial first-person position.
 axeModel.position.set(0.55, -0.55, -1.15);
 axeModel.rotation.z = -0.18;
+
+// Load the real axe model.
+// Load the axe through a file picker.
+const dracoLoader = new THREE.DRACOLoader();
+
+dracoLoader.setDecoderPath(
+  "https://www.gstatic.com/draco/versioned/decoders/1.5.6/"
+);
+
+const glbLoader = new THREE.GLTFLoader();
+glbLoader.setDRACOLoader(dracoLoader);
+const axeFileInput = document.getElementById("axeFile");
+
+
+glbLoader.load(
+  "./glb.glb",
+  (gltf) => {
+    const axe = gltf.scene.getObjectByName("Axe");
+
+    if (!axe) {
+      console.error("Couldn't find the Axe group!");
+      console.log("Available groups:", gltf.scene.children);
+      return;
+    }
+
+    const oldAxe = axeModel.getObjectByName("loadedAxe");
+    if (oldAxe) axeModel.remove(oldAxe);
+
+    const weapon = new THREE.Group();
+    weapon.name = "loadedAxe";
+
+    const model = axe.clone(true);
+    weapon.add(model);
+
+    const bounds = new THREE.Box3().setFromObject(model);
+    const center = bounds.getCenter(new THREE.Vector3());
+
+    model.position.sub(center);
+    weapon.scale.setScalar(2.5);
+
+    weapon.position.set(0, 0, 0);
+    weapon.rotation.set(0, 0, 0);
+
+    axeModel.add(weapon);
+
+    console.log(
+      "Loaded axe successfully!",
+      bounds.getSize(new THREE.Vector3())
+    );
+  },
+  undefined,
+  (error) => {
+    console.error("Couldn't load the axe model:", error);
+  }
+);
 
 camera.add(axeModel);
 
@@ -377,8 +432,9 @@ const sprinting = keys['shift'];
 const speed = moveSpeed * (sprinting ? sprintMultiplier : 1);
 
 // Convert units per second into movement per frame.
-timer.update();
-const delta = timer.getDelta();
+const now = performance.now();
+const delta = Math.min((now - lastFrameTime) / 1000, 0.05);
+lastFrameTime = now;
 
 player.position.x += moveX * speed * delta;
 player.position.z += moveZ * speed * delta;
