@@ -1,4 +1,4 @@
-
+import glbUrl from "../models/glb.glb?url";
 
 const scene = new THREE.Scene();
 let lastFrameTime = performance.now();
@@ -164,7 +164,7 @@ const axeFileInput = document.getElementById("axeFile");
 
 
 glbLoader.load(
-  "/models/glb.glb",
+  import glbUrl from "../models/glb.glb?url";
   (gltf) => {
     const axe = gltf.scene.getObjectByName("Axe");
 
