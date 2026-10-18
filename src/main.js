@@ -1,4 +1,5 @@
 import glbUrl from "../models/glb.glb?url";
+import characterUrl from "../models/solus_the_knight.glb?url";
 
 const scene = new THREE.Scene();
 let lastFrameTime = performance.now();
@@ -294,12 +295,68 @@ const floor = new THREE.Mesh(
 floor.rotation.x = -Math.PI / 2;
 scene.add(floor);
 
+
 const player = new THREE.Mesh(
   new THREE.BoxGeometry(1, 1.8, 1),
   new THREE.MeshStandardMaterial({ color: 0x64b5f6 })
 );
+
 player.position.y = 0.9;
 scene.add(player);
+
+// The player object remains our invisible movement anchor.
+player.visible = false;
+
+let playerCharacter = null;
+
+// Load Solus the Knight.
+glbLoader.load(
+  characterUrl,
+  (gltf) => {
+    const character = gltf.scene;
+
+    // Measure the model so we can scale it to player height.
+    const bounds = new THREE.Box3().setFromObject(character);
+    const size = bounds.getSize(new THREE.Vector3());
+
+    if (size.y <= 0) {
+      console.error("The character model has no valid height.");
+      return;
+    }
+
+    const targetHeight = 1.8;
+    const scale = targetHeight / size.y;
+
+    character.scale.setScalar(scale);
+    character.position.y -= bounds.min.y * scale;
+
+    // Hide separately named head pieces for first-person viewing.
+    character.traverse((object) => {
+      if (
+        object.isMesh &&
+        /head|helmet|face|hair|visor/i.test(object.name)
+      ) {
+        object.visible = false;
+      }
+    });
+
+    // This group follows the player without changing the camera.
+    playerCharacter = new THREE.Group();
+    playerCharacter.add(character);
+    scene.add(playerCharacter);
+
+    console.log("Solus loaded successfully!");
+    console.log(
+      "Character animations:",
+      gltf.animations.map((clip) => clip.name)
+    );
+  },
+  undefined,
+  (error) => {
+    console.error("Couldn't load Solus the Knight:", error);
+  }
+);
+
 
 const enemy = new THREE.Mesh(
   new THREE.BoxGeometry(1, 1.5, 1),
@@ -456,6 +513,20 @@ player.position.z = THREE.MathUtils.clamp(
     player.position.y + 0.7,
     player.position.z
   );
+  
+if (playerCharacter) {
+  // Match the player's horizontal position.
+  // The character's feet stay at ground level.
+  playerCharacter.position.set(
+    player.position.x,
+    player.position.y - 0.9,
+    player.position.z
+  );
+
+  // Rotate the character with the player's facing direction.
+  playerCharacter.rotation.y = yaw;
+}
+
 
 
 
