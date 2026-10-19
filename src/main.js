@@ -314,16 +314,16 @@ glbLoader.load(
   characterUrl,
   (gltf) => {
     const character = gltf.scene;
-  console.log("=== SOLUS MODEL PARTS ===");
+  const solusMesh = character.getObjectByName("Solus_Knight");
 
-character.traverse((object) => {
-  console.log(
-    object.type,
-    object.name,
-    object.isSkinnedMesh ? "(skinned mesh)" : "",
-    object.isMesh ? "(mesh)" : ""
-  );
-});
+if (!solusMesh || !solusMesh.isSkinnedMesh) {
+  console.error("Couldn't find the Solus_Knight skinned mesh.");
+  return;
+}
+
+console.log("Solus skeleton:", solusMesh.skeleton.bones.map(
+  bone => bone.name
+));
 
 console.log("=== SOLUS ANIMATIONS ===", gltf.animations.map(a => a.name));
     // Measure the model so we can scale it to player height.
