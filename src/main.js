@@ -17,7 +17,7 @@ const camera = new THREE.PerspectiveCamera(
 camera.position.set(0, 1.6, 0);
 scene.add(camera);
 
-const axeModel = new THREE.Group();
+const combat.weaponModel = new THREE.Group();
 
 // Materials
 const woodMaterial = new THREE.MeshStandardMaterial({
@@ -70,7 +70,7 @@ function addLimb(start, end, radius, material) {
     direction.normalize()
   );
 
-  axeModel.add(limb);
+  combat.weaponModel.add(limb);
   return limb;
 }
 
@@ -100,7 +100,7 @@ function addCuff(x, y, angle) {
   );
   cuff.position.set(x, y, 0.06);
   cuff.rotation.z = angle;
-  axeModel.add(cuff);
+  combat.weaponModel.add(cuff);
 }
 
 addCuff(-0.10, -0.12, -0.55);
@@ -115,7 +115,7 @@ function addHand(y, side) {
   );
   palm.position.set(0.015, y, -0.095);
   palm.rotation.z = side * -0.12;
-  axeModel.add(palm);
+  combat.weaponModel.add(palm);
 
   // Four fingers curled across the front of the handle.
   for (let i = 0; i < 4; i++) {
@@ -131,7 +131,7 @@ function addHand(y, side) {
     );
 
     finger.rotation.z = side * 0.12;
-    axeModel.add(finger);
+    combat.weaponModel.add(finger);
   }
 
   // Thumb crossing the grip.
@@ -142,7 +142,7 @@ function addHand(y, side) {
 
   thumb.position.set(-0.085, y + 0.015, -0.135);
   thumb.rotation.z = -0.8;
-  axeModel.add(thumb);
+  combat.weaponModel.add(thumb);
 }
 
 addHand(0.17, 1);
@@ -151,11 +151,11 @@ addHand(-0.20, -1);
 
 // Initial first-person position.
 // Initial first-person position.
-axeModel.position.set(0.55, -0.55, -1.15);
-axeModel.rotation.z = -0.18;
+combat.weaponModel.position.set(0.55, -0.55, -1.15);
+combat.weaponModel.rotation.z = -0.18;
 
-// Load the real axe model.
-// Load the axe through a file picker.
+// Load the real combat.weapon model.
+// Load the combat.weapon through a file picker.
 const dracoLoader = new THREE.DRACOLoader();
 
 dracoLoader.setDecoderPath(
@@ -164,28 +164,28 @@ dracoLoader.setDecoderPath(
 
 const glbLoader = new THREE.GLTFLoader();
 glbLoader.setDRACOLoader(dracoLoader);
-const axeFileInput = document.getElementById("axeFile");
+const combat.weaponFileInput = document.getElementById("combat.weaponFile");
 
 
 glbLoader.load(
   glbUrl,
   (gltf) => {
-    const axe = gltf.scene.getObjectByName("Axe");
+    const combat.weapon = gltf.scene.getObjectByName("combat.weapon");
     // ...
 
-    if (!axe) {
-      console.error("Couldn't find the Axe group!");
+    if (!combat.weapon) {
+      console.error("Couldn't find the combat.weapon group!");
       console.log("Available groups:", gltf.scene.children);
       return;
     }
 
-    const oldAxe = axeModel.getObjectByName("loadedAxe");
-    if (oldAxe) axeModel.remove(oldAxe);
+    const oldcombat.weapon = combat.weaponModel.getObjectByName("loadedcombat.weapon");
+    if (oldcombat.weapon) combat.weaponModel.remove(oldcombat.weapon);
 
     const weapon = new THREE.Group();
-    weapon.name = "loadedAxe";
+    weapon.name = "loadedcombat.weapon";
 
-    const model = axe.clone(true);
+    const model = combat.weapon.clone(true);
     weapon.add(model);
 
     const bounds = new THREE.Box3().setFromObject(model);
@@ -197,20 +197,20 @@ glbLoader.load(
     weapon.position.set(0, 0, 0);
     weapon.rotation.set(0, 0, 0);
 
-    axeModel.add(weapon);
+    combat.weaponModel.add(weapon);
 
     console.log(
-      "Loaded axe successfully!",
+      "Loaded combat.weapon successfully!",
       bounds.getSize(new THREE.Vector3())
     );
   },
   undefined,
   (error) => {
-    console.error("Couldn't load the axe model:", error);
+    console.error("Couldn't load the combat.weapon model:", error);
   }
 );
 
-camera.add(axeModel);
+camera.add(combat.weaponModel);
 
 
 
@@ -286,7 +286,7 @@ document.body.appendChild(crosshair);
 
 function updateHealthBar() {
   healthFill.style.width =
-    `${Math.max(0, enemyHP / maxEnemyHP) * 100}%`;
+    `${Math.max(0, enemyHP / mcombat.weaponnemyHP) * 100}%`;
 }
 const light = new THREE.HemisphereLight(0xffffff, 0x444466, 3);
 scene.add(light);
@@ -402,7 +402,7 @@ enemy.position.set(0, 0.75, -4);
 scene.add(enemy);
 
 let enemyHP = 100;
-const maxEnemyHP = 100;
+const mcombat.weaponnemyHP = 100;
 
 const combat = new CombatSystem({
   camera,
@@ -530,7 +530,7 @@ if (playerCharacter) {
 
 const smooth = (t) => t * t * (3 - 2 * t);
 
-// Each pose moves the entire axe-and-arms assembly.
+// Each pose moves the entire combat.weapon-and-arms assembly.
 const idlePose = {
   x: 0.55, y: -0.55, z: -1.15,
   rx: 0, ry: 0, rz: -0.18
@@ -548,17 +548,17 @@ const impactPose = {
 };
 
 
-function setAxePose(pose) {
-  axeModel.position.set(pose.x, pose.y, pose.z);
-  axeModel.rotation.set(pose.rx, pose.ry, pose.rz);
+function setcombat.weaponPose(pose) {
+  combat.weaponModel.position.set(pose.x, pose.y, pose.z);
+  combat.weaponModel.rotation.set(pose.rx, pose.ry, pose.rz);
 }
 
 
-function blendAxePose(from, to, progress, easing = smooth) {
+function blendcombat.weaponPose(from, to, progress, easing = smooth) {
   const t = easing(THREE.MathUtils.clamp(progress, 0, 1));
   const mix = (a, b) => a + (b - a) * t;
 
-  setAxePose({
+  setcombat.weaponPose({
     x: mix(from.x, to.x),
     y: mix(from.y, to.y),
     z: mix(from.z, to.z),
@@ -574,32 +574,32 @@ function blendAxePose(from, to, progress, easing = smooth) {
 
 if (combat.phase === 'windup') {
   // Pull the entire weapon and arms back to the right.
-  blendAxePose(
+  blendcombat.weaponPose(
     idlePose,
     windupPose,
-    combat.phaseTimer / axe.windup
+    combat.phaseTimer / combat.weapon.windup
   );
 
 } else if (combat.phase === 'swing') {
   // Accelerate through a wide right-to-left sweep.
   // The quadratic easing makes the strike gain speed.
-  blendAxePose(
+  blendcombat.weaponPose(
     windupPose,
     impactPose,
-    combat.phaseTimer / axe.swing,
+    combat.phaseTimer / combat.weapon.swing,
     t => t * t
   );
 
 } else if (combat.phase === 'recovery') {
   // The weapon carries through before returning to guard.
-  blendAxePose(
+  blendcombat.weaponPose(
     impactPose,
     idlePose,
-    combat.phaseTimer / axe.recovery
+    combat.phaseTimer / combat.weapon.recovery
   );
 
 } else {
-  setAxePose(idlePose);
+  setcombat.weaponPose(idlePose);
 }
 
 combat.update(delta);
