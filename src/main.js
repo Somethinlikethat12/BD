@@ -313,27 +313,49 @@ let playerCharacter = null;
 glbLoader.load(
   characterUrl,
   (gltf) => {
-    const character = gltf.scene;
   const solusMesh = character.getObjectByName("Solus_Knight");
+const skeleton = solusMesh.skeleton;
 
-if (!solusMesh || !solusMesh.isSkinnedMesh) {
-  console.error("Couldn't find the Solus_Knight skinned mesh.");
-  return;
+const armBoneNames = new Set([
+  "Rig_Shoulder_L",
+  "Rig_Upper_Arm_L",
+  "Rig_Lower_Arm_L",
+  "Rig_hand_L",
+  "Rig_Shoulder_R",
+  "Rig_Upper_Arm_R",
+  "Rig_Lower_Arm_R",
+  "Rig_hand_R"
+]);
+
+const skinIndices = solusMesh.geometry.getAttribute("skinIndex");
+const skinWeights = solusMesh.geometry.getAttribute("skinWeight");
+
+let armVertices = 0;
+let bodyVertices = 0;
+
+for (let i = 0; i &lt; skinIndices.count; i++) {
+  let armWeight = 0;
+
+  for (let j = 0; j &lt; 4; j++) {
+    const boneIndex = skinIndices.getComponent(i, j);
+    const weight = skinWeights.getComponent(i, j);
+    const boneName = skeleton.bones[boneIndex]?.name;
+
+    if (armBoneNames.has(boneName)) {
+      armWeight += weight;
+    }
+  }
+
+  if (armWeight >= 0.5) {
+    armVertices++;
+  } else {
+    bodyVertices++;
+  }
 }
 
-console.log("Solus skeleton:", solusMesh.skeleton.bones.map(
-  bone => bone.name
-));
-
-console.log("=== SOLUS ANIMATIONS ===", gltf.animations.map(a => a.name));
-    // Measure the model so we can scale it to player height.
-    const bounds = new THREE.Box3().setFromObject(character);
-    const size = bounds.getSize(new THREE.Vector3());
-
-    if (size.y <= 0) {
-      console.error("The character model has no valid height.");
-      return;
-    }
+console.log("Vertices mostly belonging to arms:", armVertices);
+console.log("Other vertices:", bodyVertices);
+console.log("Total vertices:", skinIndices.count);
 
     const targetHeight = 1.8;
     const scale = targetHeight / size.y;
