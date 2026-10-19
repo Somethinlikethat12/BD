@@ -422,8 +422,7 @@ const combat = new CombatSystem({
 
 const raycaster = new THREE.Raycaster();
 
-let attackPhase = 'ready';
-let combat.phaseTimer = 0;
+
 
 
 
