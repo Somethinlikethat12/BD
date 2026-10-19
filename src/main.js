@@ -1,3 +1,6 @@
+
+import { CombatSystem } from "./combat/CombatSystem.js";
+
 import glbUrl from "../models/glb.glb?url";
 import characterUrl from "../models/Solus_the_knight.glb?url";
 
@@ -6,7 +9,7 @@ let lastFrameTime = performance.now();
 scene.background = new THREE.Color(0x171923);
 
 const camera = new THREE.PerspectiveCamera(
-  75,
+  75,cona
   window.innerWidth / window.innerHeight,
   0.1,
   1000
@@ -403,19 +406,24 @@ let enemyHP = 100;
 const maxEnemyHP = 100;
 
 
-const axe = {
-  damage: 20,
-  range: 2.5,
-  windup: 0.4,
-  swing: 0.2,
-  recovery: 0.4,
-};
+
+const combat = new CombatSystem({
+  camera,
+  enemy,
+  scene,
+  getEnemyHP: () => enemyHP,
+  setEnemyHP: (value) => {
+    enemyHP = value;
+  },
+  updateHealthBar
+});
+
 
 
 const raycaster = new THREE.Raycaster();
 
 let attackPhase = 'ready';
-let phaseTimer = 0;
+let combat.phaseTimer = 0;
 
 function hitWithAxe() {
   if (enemyHP <= 0) return;
@@ -444,7 +452,7 @@ function startAxeAttack() {
   if (attackPhase !== 'ready') return;
 
   attackPhase = 'windup';
-  phaseTimer = 0;
+  combat.phaseTimer = 0;
 }
 
 const keys = {};
@@ -467,7 +475,7 @@ window.addEventListener('keyup', (event) => {
 
 renderer.domElement.addEventListener('mousedown', (event) => {
   if (event.button === 0) {
-    startAxeAttack();
+    combat.startAttack();
   }
 });
 
@@ -607,61 +615,37 @@ function blendAxePose(from, to, progress, easing = smooth) {
 
 
 
-if (attackPhase === 'windup') {
+if (combat.phase === 'windup') {
   // Pull the entire weapon and arms back to the right.
   blendAxePose(
     idlePose,
     windupPose,
-    phaseTimer / axe.windup
+    combat.phaseTimer / axe.windup
   );
 
-} else if (attackPhase === 'swing') {
+} else if (combat.phase === 'swing') {
   // Accelerate through a wide right-to-left sweep.
   // The quadratic easing makes the strike gain speed.
   blendAxePose(
     windupPose,
     impactPose,
-    phaseTimer / axe.swing,
+    combat.phaseTimer / axe.swing,
     t => t * t
   );
 
-} else if (attackPhase === 'recovery') {
+} else if (combat.phase === 'recovery') {
   // The weapon carries through before returning to guard.
   blendAxePose(
     impactPose,
     idlePose,
-    phaseTimer / axe.recovery
+    combat.phaseTimer / axe.recovery
   );
 
 } else {
   setAxePose(idlePose);
 }
 
-if (attackPhase !== 'ready') {
-  phaseTimer += delta;
-
-  if (
-    attackPhase === 'windup' &&
-    phaseTimer >= axe.windup
-  ) {
-    attackPhase = 'swing';
-    phaseTimer = 0;
-
-    hitWithAxe();
-  } else if (
-    attackPhase === 'swing' &&
-    phaseTimer >= axe.swing
-  ) {
-    attackPhase = 'recovery';
-    phaseTimer = 0;
-  } else if (
-    attackPhase === 'recovery' &&
-    phaseTimer >= axe.recovery
-  ) {
-    attackPhase = 'ready';
-    phaseTimer = 0;
-  }
-}
+combat.update(delta);
 
     renderer.render(scene, camera);
 }
