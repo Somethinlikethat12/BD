@@ -393,7 +393,6 @@ console.log("Total vertices:", skinIndices.count);
   }
 );
 
-
 const enemy = new THREE.Mesh(
   new THREE.BoxGeometry(1, 1.5, 1),
   new THREE.MeshStandardMaterial({ color: 0xef5350 })
@@ -404,8 +403,6 @@ scene.add(enemy);
 
 let enemyHP = 100;
 const maxEnemyHP = 100;
-
-
 
 const combat = new CombatSystem({
   camera,
@@ -418,38 +415,12 @@ const combat = new CombatSystem({
   updateHealthBar
 });
 
-
-
-const raycaster = new THREE.Raycaster();
-
-
-
-
-
-  const hits = raycaster.intersectObject(enemy);
-
-  if (hits.length === 0) return;
-  if (hits[0].distance > axe.range) return;
-
-  enemyHP = Math.max(0, enemyHP - axe.damage);
-  updateHealthBar();
-
-  if (enemyHP === 0) {
-    scene.remove(enemy);
-  }
-}
-
-
-
 const keys = {};
 
 let yaw = 0;
 let pitch = 0;
 
 const mouseSensitivity = 0.002;
-
-
-
 
 window.addEventListener('keydown', (event) => {
   keys[event.key.toLowerCase()] = true;
