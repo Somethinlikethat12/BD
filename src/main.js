@@ -1,5 +1,5 @@
 
-import { CombatSystem } from "./combat/CombatSystem.js";
+import { CombatSystem } from "./combat/combatSystem.js";
 
 import glbUrl from "../models/glb.glb?url";
 import characterUrl from "../models/Solus_the_knight.glb?url";
