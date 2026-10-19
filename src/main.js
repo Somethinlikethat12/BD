@@ -17,142 +17,18 @@ const camera = new THREE.PerspectiveCamera(
 camera.position.set(0, 1.6, 0);
 scene.add(camera);
 
-const combat.weaponModel = new THREE.Group();
-
-// Materials
-const woodMaterial = new THREE.MeshStandardMaterial({
-  color: 0x79502f,
-  roughness: 0.85
-});
-
-const steelMaterial = new THREE.MeshStandardMaterial({
-  color: 0xaeb8c4,
-  metalness: 0.8,
-  roughness: 0.3
-});
-
-const darkMetalMaterial = new THREE.MeshStandardMaterial({
-  color: 0x454b55,
-  metalness: 0.65,
-  roughness: 0.45
-});
-
-const sleeveMaterial = new THREE.MeshStandardMaterial({
-  color: 0x343b4b,
-  roughness: 0.9
-});
-
-const skinMaterial = new THREE.MeshStandardMaterial({
-  color: 0xc58f70,
-  roughness: 0.85
-});
-
-// Creates an elongated rounded limb between two points.
-function addLimb(start, end, radius, material) {
-  const a = new THREE.Vector3(...start);
-  const b = new THREE.Vector3(...end);
-  const direction = new THREE.Vector3().subVectors(b, a);
-  const length = direction.length();
-
-  const limb = new THREE.Mesh(
-    new THREE.CapsuleGeometry(
-      radius,
-      Math.max(0.01, length - radius * 2),
-      4,
-      8
-    ),
-    material
-  );
-
-  limb.position.copy(a).add(b).multiplyScalar(0.5);
-  limb.quaternion.setFromUnitVectors(
-    new THREE.Vector3(0, 1, 0),
-    direction.normalize()
-  );
-
-  combat.weaponModel.add(limb);
-  return limb;
-}
+const combatweaponModel = new THREE.Group();
 
 
- // FOREARMS: broad sleeves with visible elbow joints.
-
-addLimb(
-  [-0.38, -0.92, 0.10],
-  [-0.10, -0.12, 0.08],
-  0.15,
-  sleeveMaterial
-);
-
-addLimb(
-  [0.48, -0.92, 0.10],
-  [0.10, 0.18, 0.08],
-  0.15,
-  sleeveMaterial
-);
+ 
 
 
-// Cuffs make the transition from sleeve to hand visible.
-function addCuff(x, y, angle) {
-  const cuff = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.145, 0.13, 0.13, 10),
-    darkMetalMaterial
-  );
-  cuff.position.set(x, y, 0.06);
-  cuff.rotation.z = angle;
-  combat.weaponModel.add(cuff);
-}
-
-addCuff(-0.10, -0.12, -0.55);
-addCuff(0.10, 0.18, 0.55);
-
-// HANDS: palms, four fingers, and thumbs.
-function addHand(y, side) {
-  // Palm
-  const palm = new THREE.Mesh(
-    new THREE.BoxGeometry(0.17, 0.15, 0.105),
-    skinMaterial
-  );
-  palm.position.set(0.015, y, -0.095);
-  palm.rotation.z = side * -0.12;
-  combat.weaponModel.add(palm);
-
-  // Four fingers curled across the front of the handle.
-  for (let i = 0; i < 4; i++) {
-    const finger = new THREE.Mesh(
-      new THREE.CapsuleGeometry(0.023, 0.055, 3, 6),
-      skinMaterial
-    );
-
-    finger.position.set(
-      -0.055 + i * 0.038,
-      y - 0.025 - Math.abs(i - 1.5) * 0.008,
-      -0.16
-    );
-
-    finger.rotation.z = side * 0.12;
-    combat.weaponModel.add(finger);
-  }
-
-  // Thumb crossing the grip.
-  const thumb = new THREE.Mesh(
-    new THREE.CapsuleGeometry(0.026, 0.065, 3, 6),
-    skinMaterial
-  );
-
-  thumb.position.set(-0.085, y + 0.015, -0.135);
-  thumb.rotation.z = -0.8;
-  combat.weaponModel.add(thumb);
-}
-
-addHand(0.17, 1);
-addHand(-0.20, -1);
 
 
 // Initial first-person position.
 // Initial first-person position.
-combat.weaponModel.position.set(0.55, -0.55, -1.15);
-combat.weaponModel.rotation.z = -0.18;
+combatweaponModel.position.set(0.55, -0.55, -1.15);
+combatweaponModel.rotation.z = -0.18;
 
 // Load the real combat.weapon model.
 // Load the combat.weapon through a file picker.
@@ -179,8 +55,8 @@ glbLoader.load(
       return;
     }
 
-    const oldcombat.weapon = combat.weaponModel.getObjectByName("loadedcombat.weapon");
-    if (oldcombat.weapon) combat.weaponModel.remove(oldcombat.weapon);
+    const oldcombat.weapon = combatweaponModel.getObjectByName("loadedcombat.weapon");
+    if (oldcombat.weapon) combatweaponModel.remove(oldcombat.weapon);
 
     const weapon = new THREE.Group();
     weapon.name = "loadedcombat.weapon";
@@ -197,7 +73,7 @@ glbLoader.load(
     weapon.position.set(0, 0, 0);
     weapon.rotation.set(0, 0, 0);
 
-    combat.weaponModel.add(weapon);
+    combatweaponModel.add(weapon);
 
     console.log(
       "Loaded combat.weapon successfully!",
@@ -210,7 +86,7 @@ glbLoader.load(
   }
 );
 
-camera.add(combat.weaponModel);
+camera.add(combatweaponModel);
 
 
 
@@ -549,8 +425,8 @@ const impactPose = {
 
 
 function setcombat.weaponPose(pose) {
-  combat.weaponModel.position.set(pose.x, pose.y, pose.z);
-  combat.weaponModel.rotation.set(pose.rx, pose.ry, pose.rz);
+  combatweaponModel.position.set(pose.x, pose.y, pose.z);
+  combatweaponModel.rotation.set(pose.rx, pose.ry, pose.rz);
 }
 
 
