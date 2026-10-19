@@ -336,10 +336,10 @@ const skinWeights = solusMesh.geometry.getAttribute("skinWeight");
 let armVertices = 0;
 let bodyVertices = 0;
 
-for (let i = 0; i &lt; skinIndices.count; i++) {
+for (let i = 0; i < skinIndices.count; i++)  {
   let armWeight = 0;
 
-  for (let j = 0; j &lt; 4; j++) {
+  for (let j = 0; j < 4; j++) {
     const boneIndex = skinIndices.getComponent(i, j);
     const weight = skinWeights.getComponent(i, j);
     const boneName = skeleton.bones[boneIndex]?.name;
