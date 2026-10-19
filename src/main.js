@@ -314,7 +314,18 @@ glbLoader.load(
   characterUrl,
   (gltf) => {
     const character = gltf.scene;
+  console.log("=== SOLUS MODEL PARTS ===");
 
+character.traverse((object) => {
+  console.log(
+    object.type,
+    object.name,
+    object.isSkinnedMesh ? "(skinned mesh)" : "",
+    object.isMesh ? "(mesh)" : ""
+  );
+});
+
+console.log("=== SOLUS ANIMATIONS ===", gltf.animations.map(a => a.name));
     // Measure the model so we can scale it to player height.
     const bounds = new THREE.Box3().setFromObject(character);
     const size = bounds.getSize(new THREE.Vector3());
