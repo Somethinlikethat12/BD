@@ -1,5 +1,5 @@
 import glbUrl from "../models/glb.glb?url";
-import characterUrl from "../models/solus_the_knight.glb?url";
+import characterUrl from "../models/Solus_the_knight.glb?url";
 
 const scene = new THREE.Scene();
 let lastFrameTime = performance.now();
