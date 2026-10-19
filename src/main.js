@@ -425,15 +425,7 @@ const raycaster = new THREE.Raycaster();
 let attackPhase = 'ready';
 let combat.phaseTimer = 0;
 
-function hitWithAxe() {
-  if (enemyHP <= 0) return;
 
-  camera.updateMatrixWorld(true);
-
-  raycaster.setFromCamera(
-    new THREE.Vector2(0, 0),
-    camera
-  );
 
   const hits = raycaster.intersectObject(enemy);
 
@@ -448,12 +440,7 @@ function hitWithAxe() {
   }
 }
 
-function startAxeAttack() {
-  if (attackPhase !== 'ready') return;
 
-  attackPhase = 'windup';
-  combat.phaseTimer = 0;
-}
 
 const keys = {};
 
